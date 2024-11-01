@@ -1,0 +1,90 @@
+int buttonPin = 4;
+byte estado = 0;
+int buttonState = LOW;
+int lastButtonState = LOW;
+long lastDebounceTime = 0;
+long debounceDelay = 50;
+long tempo_passado = 0;
+long periodo = 1000;
+int Led = -1;
+int totalLEDs = 7;
+bool gameEnded = false;
+bool gameStart = false;
+long buttonPressStart = 0;
+
+void pisca() {
+  for (int x = 0; x < 3; x++) {
+    for (int z = 6; z <= 13; z++) {
+      digitalWrite(z, HIGH);
+    }
+    delay(500);
+    for (int z = 6; z <= 13; z++) {
+      digitalWrite(z, LOW);
+    }
+    delay(500);
+  }
+}
+
+void setup() {
+  for (int ledPin = 6; ledPin <= 13; ledPin++) {
+    pinMode(ledPin, OUTPUT);
+  }
+  pinMode(buttonPin, INPUT_PULLUP);
+  randomSeed(analogRead(0));
+}
+
+void loop() {
+  int reading = !digitalRead(buttonPin);
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();
+  }
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (buttonState != reading) {
+      buttonState = reading;
+      if (buttonState == HIGH) {
+      if (buttonState==HIGH && gameStart==true){
+    	if (( Led != -1) && (estado & (1<<Led-6))==0){
+      		estado |= (1<<Led-6);
+        }
+      }
+        if (buttonPressStart == 0) {
+          buttonPressStart = millis();
+        }
+      } else {
+        buttonPressStart = 0;
+      }
+    }
+  }
+  if (buttonPressStart > 0 && (millis() - buttonPressStart == 2000)) {
+      pisca();
+      estado==0;
+    if (!gameStart) {
+      gameStart = true;
+    }
+    else {
+      gameStart = false;
+  	}
+   }
+  
+  if (gameStart) {
+    if (estado == 254) {
+      gameEnded = true;
+      estado = 0;
+      pisca();
+      delay(1000);
+      gameEnded = false;
+      gameStart = false;
+      return;
+    }
+
+    if (millis() - tempo_passado > 1000) {
+      if (Led != -1 && (estado & (1 << (Led - 6))) == 0) {
+        digitalWrite(Led, LOW);
+      }
+      Led = random(6, 14);
+      digitalWrite(Led, HIGH);
+      tempo_passado = millis();
+    }
+  }
+  lastButtonState = reading;
+}
